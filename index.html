@@ -426,7 +426,7 @@
         let playerName = '';
         let selectedCharacter = '🚀';
         let soundEnabled = true;
-        let highScore = parseInt(localStorage.getItem('galaxyShooterHighScore') || '0');
+        let highScore = 0;
         
         let gameState = {
             player: { x: 370, y: 520 },
@@ -450,25 +450,28 @@
         };
 
         // เสียงเอฟเฟกต์
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
         function playSound(frequency, duration, type = 'square') {
             if (!soundEnabled) return;
             
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = type;
-            
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
         }
 
         function toggleSound() {
@@ -795,22 +798,4 @@
             }
             
             // Rapid Fire
-            if (gameState.powerupEffects.rapidFire.active) {
-                if (currentTime > gameState.powerupEffects.rapidFire.duration) {
-                    gameState.powerupEffects.rapidFire.active = false;
-                    gameState.shotCooldown = 200;
-                }
-            }
-            
-            // อัปเดต UI bars
-            updatePowerupBars();
-        }
-
-        // อัปเดต powerup bars
-        function updatePowerupBars() {
-            const currentTime = Date.now();
-            
-            // Shield bar
-            const shieldBar = document.getElementById('shield-bar');
-            if (gameState.powerupEffects.shield.active) {
-                const remaining = (gameState
+            if (
